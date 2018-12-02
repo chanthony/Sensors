@@ -2,11 +2,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import ketai.sensors.*;
 
+
 KetaiSensor sensor;
 
 float cursorX, cursorY;
 float light = 0; 
 float proxSensorThreshold = 20; //you will need to change this per your device.
+
+// Side to side rotation
+float zero_angle;
+float current_angle;
+
+// Tilt
+float zero_tilt;
+float current_tilt;
+
+float current_force;
+float zero_force;
+
+// Which of the two boxes have been selected. 0 or 1
+int current_cursor = 0;
+int cursor_swap = 60;
+
+// Which stage we're in
+int current_stage = 1;
 
 private class Target
 {
@@ -24,7 +43,7 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
-  size(600, 600); //you can change this to be fullscreen
+  size(1300, 2300); //you can change this to be fullscreen
   frameRate(60);
   sensor = new KetaiSensor(this);
   sensor.start();
@@ -44,6 +63,7 @@ void setup() {
   }
 
   Collections.shuffle(targets); // randomize the order of the button;
+
 }
 
 void draw() {
@@ -55,6 +75,8 @@ void draw() {
   noStroke(); //no stroke
 
   countDownTimerWait--;
+
+  text("Trial #: " + trialIndex, 50, 50);
 
   if (startTime == 0)
     startTime = millis();
@@ -72,88 +94,177 @@ void draw() {
     return;
   }
 
-  for (int i=0; i<4; i++)
-  {
-    if (targets.get(index).target==i)
+  if(current_stage == 1){
+    text("Tilt: " + (zero_tilt - current_tilt), width/2, height/2 - 50);
+    text("Angle: " + (zero_angle - current_angle), width/2, height/2);
+
+    // Draw the squares
+    if (targets.get(index).target==0)
       fill(0, 255, 0);
     else
       fill(180, 180, 180);
-    ellipse(300, i*150+100, 100, 100);
+    rect(width/2 - 100 - 300, height/2 - 200 - 100, 300, 300);
+
+    if (targets.get(index).target==1)
+      fill(0, 255, 0);
+    else
+      fill(180, 180, 180);
+    rect(width/2 - 100 + 300, height/2 - 200  - 100, 300, 300);
+
+    if (targets.get(index).target==2)
+      fill(0, 255, 0);
+    else
+      fill(180, 180, 180);
+    rect(width/2 - 100 - 300, height/2 - 200  + 300, 300, 300);
+
+    if (targets.get(index).target==3)
+      fill(0, 255, 0);
+    else
+      fill(180, 180, 180);
+    rect(width/2 - 100 + 300, height/2 - 200  + 300, 300, 300);
   }
 
-  if (light>proxSensorThreshold)
-    fill(180, 0, 0);
-  else
-    fill(255, 0, 0);
-  ellipse(cursorX, cursorY, 50, 50);
+  if(current_stage == 2){
+    if (targets.get(index).action==0)
+      text("LEFT", width/2, 150);
+    else
+      text("RIGHT", width/2, 150);
+  }
 
-  fill(255);//white
-  text("Trial " + (index+1) + " of " +trialCount, width/2, 50);
-  text("Target #" + (targets.get(index).target)+1, width/2, 100);
-
-  if (targets.get(index).action==0)
-    text("UP", width/2, 150);
-  else
-    text("DOWN", width/2, 150);
+  countDownTimerWait = countDownTimerWait - 1;
 }
 
 void onAccelerometerEvent(float x, float y, float z)
 {
   int index = trialIndex;
 
-  if (userDone || index>=targets.size())
-    return;
+  current_force = x;
 
-  if (light>proxSensorThreshold) //only update cursor, if light is low
-  {
-    cursorX = 300+x*40; //cented to window and scaled
-    cursorY = 300-y*40; //cented to window and scaled
-  }
+  if (userDone || index>=targets.size() || current_stage == 1)
+    return;
 
   Target t = targets.get(index);
 
   if (t==null)
     return;
  
-  if (light<=proxSensorThreshold && abs(z-9.8)>4 && countDownTimerWait<0) //possible hit event
-  {
-    if (hitTest()==t.target)//check if it is the right target
-    {
-      //println(z-9.8); use this to check z output!
-      if (((z-9.8)>4 && t.action==0) || ((z-9.8)<-4 && t.action==1))
-      {
-        println("Right target, right z direction!");
-        trialIndex++; //next trial!
-      } else
-      {
-        if (trialIndex>0)
-          trialIndex--; //move back one trial as penalty!
-        println("right target, WRONG z direction!");
-      }
-      countDownTimerWait=30; //wait roughly 0.5 sec before allowing next trial
-    } 
-  } else if (light<=proxSensorThreshold && countDownTimerWait<0 && hitTest()!=t.target)
-  { 
-    println("wrong round 1 action!"); 
-
-    if (trialIndex>0)
-      trialIndex--; //move back one trial as penalty!
-
-    countDownTimerWait=30; //wait roughly 0.5 sec before allowing next trial
+  if(countDownTimerWait > 0){
+    return;
   }
-}
 
-int hitTest() 
-{
-  for (int i=0; i<4; i++)
-    if (dist(300, i*150+100, cursorX, cursorY)<100)
-      return i;
+  if(abs(x - zero_force) > 4){
+    println(current_force + " " + zero_force + " " + (current_force - zero_force));
+    if(x - zero_force > 4){
+      println("LEFT: " + " " + current_force + " " + zero_force + " " + (current_force - zero_force));
+      if(t.action == 0){
+        trialIndex++;
+        current_stage = 1;
+      }
+      else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+      }
+    }
+    else{
+      println("RIGHT: " + " " + current_force + " " + zero_force + " " + (current_force - zero_force));
+      if(t.action == 1){
+        trialIndex++;
+        current_stage = 1;
+      }
+      else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+      }
+    }
+  }
 
-  return -1;
+  countDownTimerWait = 30;
 }
 
 
 void onLightEvent(float v) //this just updates the light value
 {
-  light = v;
+  println(v);
+}
+
+void onOrientationEvent(float x, float y, float z, long time, int accuracy){
+  current_angle = z;
+  current_tilt = y;
+
+  int index = trialIndex;
+
+  if(countDownTimerWait > 0){
+    return;
+  }
+
+  // If twisted enough
+  if(current_stage == 1 && abs(current_tilt - zero_tilt) > 15 && abs(current_angle - zero_angle) > 10){
+    // Tilted to the right
+    if (zero_angle - current_angle > 0){
+      // Tilted down
+      if (zero_tilt - current_tilt < 0){
+        if (targets.get(index).target == 1){
+          println("Selected 1");
+          current_stage = 2;  
+        }
+        else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+        }
+      }
+      // Tilted up
+      else{
+        if (targets.get(index).target == 3){
+          println("Selected 3");
+          current_stage = 2;
+        }
+        else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+        }
+      }
+    }
+    else{
+      // Tilted down
+      if (zero_tilt - current_tilt < 0){
+        if (targets.get(index).target == 0){
+          println("Selected 0");
+          current_stage = 2;  
+        }
+        else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+        }
+      }
+      // Tilted up
+      else{
+        if (targets.get(index).target == 2){
+          println("Selected 2");
+          current_stage = 2;
+        }
+        else{
+          if (trialIndex>0){
+            trialIndex--; //move back one trial as penalty!
+          }
+        }
+      }
+    }
+  }
+
+  countDownTimerWait = 30;
+}
+
+void onProximityEvent(float d, long a, int b){
+  //println(d);
+}
+
+void mousePressed(){
+  zero_angle = current_angle;
+  zero_tilt = current_tilt;
+  zero_force = current_force;
 }
