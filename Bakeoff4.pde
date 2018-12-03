@@ -22,6 +22,8 @@ float zero_force;
 
 // Which of the two boxes have been selected. 0 or 1
 int current_cursor = 0;
+
+// A countdown for when to swap the cursor
 int cursor_swap = 60;
 
 // Which stage we're in
@@ -50,6 +52,7 @@ void setup() {
   orientation(PORTRAIT);
 
   rectMode(CENTER);
+  ellipseMode(RADIUS);
   textFont(createFont("Arial", 40)); //sets the font to Arial size 20
   textAlign(CENTER);
 
@@ -122,71 +125,49 @@ void draw() {
     else
       fill(180, 180, 180);
     rect(width/2 - 100 + 300, height/2 - 200  + 300, 300, 300);
+
+    fill(180);
   }
 
   if(current_stage == 2){
+    // Draw left circle
     if (targets.get(index).action==0)
-      text("LEFT", width/2, 150);
-    else
-      text("RIGHT", width/2, 150);
+      fill(0, 255, 0);
+    else{
+      fill(180);
+    }
+    ellipse(width/2 - 100 - 300, height/2 - 200, 300, 300);
+    
+    if (targets.get(index).action==1)
+      fill(0, 255, 0);
+    else{
+      fill(180);
+    }
+    ellipse(width/2 - 100 + 300, height/2 - 200, 300, 300);
+
+    // Draw cursor circle
+    noFill();
+    stroke(255,0,0);
+    strokeWeight(4);
+    ellipse(width/2 - 100 + (300 * pow(-1, current_cursor + 1)), height/2 - 200, 400, 400);
+
+    //Swap cursor every second
+    if(cursor_swap <= 0){
+      cursor_swap = 60;
+      current_cursor = (current_cursor + 1) % 2;
+    }
+    else{
+      cursor_swap--;
+    }
+
   }
 
   countDownTimerWait = countDownTimerWait - 1;
 }
 
-void onAccelerometerEvent(float x, float y, float z)
-{
-  int index = trialIndex;
-
-  current_force = x;
-
-  if (userDone || index>=targets.size() || current_stage == 1)
-    return;
-
-  Target t = targets.get(index);
-
-  if (t==null)
-    return;
- 
-  if(countDownTimerWait > 0){
-    return;
-  }
-
-  if(abs(x - zero_force) > 4){
-    println(current_force + " " + zero_force + " " + (current_force - zero_force));
-    if(x - zero_force > 4){
-      println("LEFT: " + " " + current_force + " " + zero_force + " " + (current_force - zero_force));
-      if(t.action == 0){
-        trialIndex++;
-        current_stage = 1;
-      }
-      else{
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-      }
-    }
-    else{
-      println("RIGHT: " + " " + current_force + " " + zero_force + " " + (current_force - zero_force));
-      if(t.action == 1){
-        trialIndex++;
-        current_stage = 1;
-      }
-      else{
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-      }
-    }
-  }
-
-  countDownTimerWait = 30;
-}
-
-
 void onLightEvent(float v) //this just updates the light value
 {
-  println(v);
+  //println(v);
 }
 
 void onOrientationEvent(float x, float y, float z, long time, int accuracy){
@@ -254,17 +235,44 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
         }
       }
     }
-  }
 
-  countDownTimerWait = 30;
+    countDownTimerWait = 30;
+  }
 }
 
 void onProximityEvent(float d, long a, int b){
-  //println(d);
+  // Only use the proximity sensor in the second stage
+  if(current_stage == 1){
+    return;
+  }
+
+  // Avoid repeated rapid mistakes
+  if(countDownTimerWait > 0){
+    println(countDownTimerWait);
+    return;
+  }
+
+  int index = trialIndex;
+
+
+  // If the sensor is covered
+  if(d == 0.0){
+    println("GUESSED");
+    // Selected the correct option
+    if(current_cursor == targets.get(index).action){
+      println("Stage 2 correct");
+      trialIndex++;
+      current_stage = 1;
+    }
+    else{
+      println("MISTAKE IN STAGE 2");
+      trialIndex--;
+      countDownTimerWait = 30;
+    }
+  }
 }
 
 void mousePressed(){
   zero_angle = current_angle;
   zero_tilt = current_tilt;
-  zero_force = current_force;
 }
