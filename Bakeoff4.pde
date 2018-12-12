@@ -79,7 +79,7 @@ void draw() {
 
   countDownTimerWait--;
 
-  text("Trial #: " + trialIndex, 50, 50);
+  //text("Trial #: " + trialIndex, 50, 50);
 
   if (startTime == 0)
     startTime = millis();
@@ -98,33 +98,37 @@ void draw() {
   }
 
   if(current_stage == 1){
-    text("Tilt: " + (zero_tilt - current_tilt), width/2, height/2 - 50);
-    text("Angle: " + (zero_angle - current_angle), width/2, height/2);
+
+    stroke(255);
 
     // Draw the squares
     if (targets.get(index).target==0)
       fill(0, 255, 0);
     else
-      fill(180, 180, 180);
-    rect(width/2 - 100 - 300, height/2 - 200 - 100, 300, 300);
+      noFill();
+    ellipse(0,0,500,500);
+    //rect(width/2 - 100 - 300, height/2 - 200 - 100, 300, 300);
 
     if (targets.get(index).target==1)
       fill(0, 255, 0);
     else
-      fill(180, 180, 180);
-    rect(width/2 - 100 + 300, height/2 - 200  - 100, 300, 300);
+      noFill();
+    ellipse(width - 300,0,500,500);
+    //rect(width/2 - 100 + 300, height/2 - 200  - 100, 300, 300);
 
     if (targets.get(index).target==2)
       fill(0, 255, 0);
     else
-      fill(180, 180, 180);
-    rect(width/2 - 100 - 300, height/2 - 200  + 300, 300, 300);
+      noFill();
+    ellipse(0,height - 200,500,500);
 
     if (targets.get(index).target==3)
       fill(0, 255, 0);
     else
-      fill(180, 180, 180);
-    rect(width/2 - 100 + 300, height/2 - 200  + 300, 300, 300);
+      noFill();
+    ellipse(width - 300,height - 200,500,500);
+
+    noStroke();
 
     fill(180);
   }
@@ -136,20 +140,20 @@ void draw() {
     else{
       fill(180);
     }
-    ellipse(width/2 - 100 - 300, height/2 - 200, 300, 300);
+    ellipse(width/2 - 100 - 400, height/2 - 200 + 100, 300, 300);
     
     if (targets.get(index).action==1)
       fill(0, 255, 0);
     else{
       fill(180);
     }
-    ellipse(width/2 - 100 + 300, height/2 - 200, 300, 300);
+    ellipse(width/2 - 100 + 400, height/2 - 200 + 100, 300, 300);
 
     // Draw cursor circle
     noFill();
     stroke(255,0,0);
-    strokeWeight(4);
-    ellipse(width/2 - 100 + (300 * pow(-1, current_cursor + 1)), height/2 - 200, 400, 400);
+    strokeWeight(8);
+    ellipse(width/2 - 100 + (400 * pow(-1, current_cursor + 1)), height/2 - 200 + 100, 400, 400);
 
     //Swap cursor every second
     if(cursor_swap <= 0){
@@ -160,6 +164,7 @@ void draw() {
       cursor_swap--;
     }
 
+    strokeWeight(1);
   }
 
   countDownTimerWait = countDownTimerWait - 1;
