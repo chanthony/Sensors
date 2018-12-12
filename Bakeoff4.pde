@@ -45,11 +45,11 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
-  size(1300, 2300); //you can change this to be fullscreen
+  size(2300, 1300); //you can change this to be fullscreen
   frameRate(60);
   sensor = new KetaiSensor(this);
   sensor.start();
-  orientation(PORTRAIT);
+  orientation(LANDSCAPE);
 
   rectMode(CENTER);
   ellipseMode(RADIUS);
@@ -171,8 +171,8 @@ void onLightEvent(float v) //this just updates the light value
 }
 
 void onOrientationEvent(float x, float y, float z, long time, int accuracy){
-  current_angle = z;
-  current_tilt = y;
+  current_angle = y;
+  current_tilt = z;
 
   int index = trialIndex;
 
@@ -182,15 +182,17 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
 
   // If twisted enough
   if(current_stage == 1 && abs(current_tilt - zero_tilt) > 15 && abs(current_angle - zero_angle) > 10){
+    println("TILTED");
     // Tilted to the right
     if (zero_angle - current_angle > 0){
       // Tilted down
-      if (zero_tilt - current_tilt < 0){
+      if (zero_tilt - current_tilt > 0){
         if (targets.get(index).target == 1){
           println("Selected 1");
           current_stage = 2;  
         }
         else{
+          println("Mistake in stage 1");
           if (trialIndex>0){
             trialIndex--; //move back one trial as penalty!
           }
@@ -203,6 +205,7 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
           current_stage = 2;
         }
         else{
+          println("Mistake in stage 1");
           if (trialIndex>0){
             trialIndex--; //move back one trial as penalty!
           }
@@ -211,12 +214,13 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     }
     else{
       // Tilted down
-      if (zero_tilt - current_tilt < 0){
+      if (zero_tilt - current_tilt > 0){
         if (targets.get(index).target == 0){
           println("Selected 0");
           current_stage = 2;  
         }
         else{
+          println("Mistake in stage 1");
           if (trialIndex>0){
             trialIndex--; //move back one trial as penalty!
           }
@@ -229,6 +233,7 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
           current_stage = 2;
         }
         else{
+          println("Mistake in stage 1");
           if (trialIndex>0){
             trialIndex--; //move back one trial as penalty!
           }
@@ -262,12 +267,16 @@ void onProximityEvent(float d, long a, int b){
     if(current_cursor == targets.get(index).action){
       println("Stage 2 correct");
       trialIndex++;
+      if(trialIndex < targets.size()){
+        current_cursor = targets.get(trialIndex).action;
+        cursor_swap = 60;
+      }
       current_stage = 1;
     }
     else{
       println("MISTAKE IN STAGE 2");
-      trialIndex--;
-      countDownTimerWait = 30;
+      if(trialIndex > 0) trialIndex--;
+      current_stage = 1;
     }
   }
 }
