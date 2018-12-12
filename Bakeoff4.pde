@@ -20,6 +20,8 @@ float current_tilt;
 float current_force;
 float zero_force;
 
+boolean wrong = false;
+
 // Which of the two boxes have been selected. 0 or 1
 int current_cursor = 0;
 
@@ -27,6 +29,9 @@ int current_cursor = 0;
 int cursor_swap = 60;
 
 // Which stage we're in
+// Stage 1 = Selecting left or right
+// Stage 2 = Proximity
+// Stage 3 = stage 1.5 = select up or down
 int current_stage = 1;
 
 private class Target
@@ -99,34 +104,27 @@ void draw() {
 
   if(current_stage == 1){
 
-    stroke(255);
+    fill(0,255,0);
+    if (targets.get(index).target%2 == 0){
+      triangle(12, 450, 738, 125, 738, 775);
+    }
+    else{
+      triangle(1888, 550, 1162, 225, 1162, 875);
+    }
 
-    // Draw the squares
-    if (targets.get(index).target==0)
-      fill(0, 255, 0);
-    else
-      noFill();
-    ellipse(0,0,500,500);
-    //rect(width/2 - 100 - 300, height/2 - 200 - 100, 300, 300);
+    noStroke();
 
-    if (targets.get(index).target==1)
-      fill(0, 255, 0);
-    else
-      noFill();
-    ellipse(width - 300,0,500,500);
-    //rect(width/2 - 100 + 300, height/2 - 200  - 100, 300, 300);
+    fill(180);
+  }
 
-    if (targets.get(index).target==2)
-      fill(0, 255, 0);
-    else
-      noFill();
-    ellipse(0,height - 200,500,500);
-
-    if (targets.get(index).target==3)
-      fill(0, 255, 0);
-    else
-      noFill();
-    ellipse(width - 300,height - 200,500,500);
+  if(current_stage == 3){
+    fill(0,255,0);
+    if (targets.get(index).target <= 1){
+      triangle(950, 50 , 690, 500, 1209, 500);
+    }
+    else{
+      triangle(950, 1000, 690, 550, 1209, 550);
+    }
 
     noStroke();
 
@@ -185,74 +183,117 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     return;
   }
 
-  // If twisted enough
-  if(current_stage == 1 && abs(current_tilt - zero_tilt) > 15 && abs(current_angle - zero_angle) > 10){
-    println("TILTED");
-    // Tilted to the right
-    if (zero_angle - current_angle > 0){
-      // Tilted down
-      if (zero_tilt - current_tilt > 0){
-        if (targets.get(index).target == 1){
-          println("Selected 1");
-          current_stage = 2;  
-        }
-        else{
-          println("Mistake in stage 1");
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-        }
-      }
-      // Tilted up
-      else{
-        if (targets.get(index).target == 3){
-          println("Selected 3");
-          current_stage = 2;
-        }
-        else{
-          println("Mistake in stage 1");
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-        }
-      }
-    }
-    else{
-      // Tilted down
-      if (zero_tilt - current_tilt > 0){
-        if (targets.get(index).target == 0){
-          println("Selected 0");
-          current_stage = 2;  
-        }
-        else{
-          println("Mistake in stage 1");
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-        }
-      }
-      // Tilted up
-      else{
-        if (targets.get(index).target == 2){
-          println("Selected 2");
-          current_stage = 2;
-        }
-        else{
-          println("Mistake in stage 1");
-          if (trialIndex>0){
-            trialIndex--; //move back one trial as penalty!
-          }
-        }
-      }
-    }
-
-    countDownTimerWait = 30;
+  if(userDone){
+    return;
   }
+
+  if(current_stage == 1 && abs(current_angle - zero_angle) > 10){
+    if(zero_angle - current_angle > 0){// Tilted to the right
+      // If they were supposed to tilt to the left
+      if(targets.get(index).target%2 != 1){
+        wrong = true;
+      }
+      current_stage = 3;
+    }
+    else{//Tilted to the left
+      // If they were supposed to tilt to the right
+      if(targets.get(index).target%2 == 1){
+        wrong = true;
+      }
+      current_stage = 3;
+    }
+  }
+
+  else if (current_stage == 3 && abs(current_tilt - zero_tilt) > 15){
+    // Tilted up
+    if(zero_tilt - current_tilt > 0){
+      // Was supposed to tilt down
+      if(targets.get(index).target > 1){
+        wrong = true;
+      }
+      current_stage = 2;
+    }
+    // Tilted down
+    else{
+      if(targets.get(index).target <= 1){
+        wrong = true;
+      }
+      current_stage = 2;
+    }
+  }
+
+  // // If twisted enough
+  // if(current_stage == 1 && abs(current_tilt - zero_tilt) > 15 && abs(current_angle - zero_angle) > 10){
+  //   println("TILTED");
+  //   // Tilted to the right
+  //   if (zero_angle - current_angle > 0){
+  //     // Tilted down
+  //     if (zero_tilt - current_tilt > 0){
+  //       if (targets.get(index).target == 1){
+  //         println("Selected 1");
+  //         current_stage = 2;  
+  //       }
+  //       else{
+  //         println("Mistake in stage 1");
+  //         if (trialIndex>0){
+  //           trialIndex--; //move back one trial as penalty!
+  //         }
+  //       }
+  //     }
+  //     // Tilted up
+  //     else{
+  //       if (targets.get(index).target == 3){
+  //         println("Selected 3");
+  //         current_stage = 2;
+  //       }
+  //       else{
+  //         println("Mistake in stage 1");
+  //         if (trialIndex>0){
+  //           trialIndex--; //move back one trial as penalty!
+  //         }
+  //       }
+  //     }
+  //   }
+  //   else{
+  //     // Tilted down
+  //     if (zero_tilt - current_tilt > 0){
+  //       if (targets.get(index).target == 0){
+  //         println("Selected 0");
+  //         current_stage = 2;  
+  //       }
+  //       else{
+  //         println("Mistake in stage 1");
+  //         if (trialIndex>0){
+  //           trialIndex--; //move back one trial as penalty!
+  //         }
+  //       }
+  //     }
+  //     // Tilted up
+  //     else{
+  //       if (targets.get(index).target == 2){
+  //         println("Selected 2");
+  //         current_stage = 2;
+  //       }
+  //       else{
+  //         println("Mistake in stage 1");
+  //         if (trialIndex>0){
+  //           trialIndex--; //move back one trial as penalty!
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   countDownTimerWait = 30;
+  // }
 }
 
 void onProximityEvent(float d, long a, int b){
   // Only use the proximity sensor in the second stage
-  if(current_stage == 1){
+  if(current_stage == 1 || current_stage == 3){
+    return;
+  }
+
+  if(userDone){
     return;
   }
 
@@ -269,7 +310,7 @@ void onProximityEvent(float d, long a, int b){
   if(d == 0.0){
     println("GUESSED");
     // Selected the correct option
-    if(current_cursor == targets.get(index).action){
+    if(current_cursor == targets.get(index).action && wrong == false){
       println("Stage 2 correct");
       trialIndex++;
       if(trialIndex < targets.size()){
