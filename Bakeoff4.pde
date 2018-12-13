@@ -9,6 +9,8 @@ float cursorX, cursorY;
 float light = 0; 
 float proxSensorThreshold = 20; //you will need to change this per your device.
 
+float current_proximity = 8.0;
+
 // Side to side rotation
 float zero_angle;
 float current_angle;
@@ -34,6 +36,8 @@ int cursor_swap = 60;
 // Stage 3 = stage 1.5 = select up or down
 int current_stage = 1;
 
+int most_common;
+
 private class Target
 {
   int target = 0;
@@ -49,6 +53,10 @@ int finishTime = 0; //records the time of the final click
 boolean userDone = false;
 int countDownTimerWait = 0;
 
+boolean zeroed;
+
+boolean started = false;
+
 void setup() {
   size(2300, 1300); //you can change this to be fullscreen
   frameRate(60);
@@ -61,17 +69,32 @@ void setup() {
   textFont(createFont("Arial", 40)); //sets the font to Arial size 20
   textAlign(CENTER);
 
+  int zero_count = 0;
+  int one_count = 0;
+
   for (int i=0; i<trialCount; i++)  //don't change this!
   {
     Target t = new Target();
     t.target = ((int)random(1000))%4;
     t.action = ((int)random(1000))%2;
     targets.add(t);
+    if(t.action == 0){
+      zero_count++;
+    }
+    else{
+      one_count++;
+    }
     println("created target with " + t.target + "," + t.action);
   }
 
   Collections.shuffle(targets); // randomize the order of the button;
 
+  if(zero_count > one_count){
+    most_common = 0;
+  }
+  else{
+    most_common = 1;
+  }
 }
 
 void draw() {
@@ -179,6 +202,14 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
 
   int index = trialIndex;
 
+  if(abs(current_angle - zero_angle) < 5 && abs(current_tilt - zero_tilt) < 10 && current_proximity == 0 && zeroed == false){
+    zeroed = true;
+  }
+
+  if(zeroed == false){
+    return;
+  }
+
   if(countDownTimerWait > 0){
     return;
   }
@@ -221,70 +252,6 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
       current_stage = 2;
     }
   }
-
-  // // If twisted enough
-  // if(current_stage == 1 && abs(current_tilt - zero_tilt) > 15 && abs(current_angle - zero_angle) > 10){
-  //   println("TILTED");
-  //   // Tilted to the right
-  //   if (zero_angle - current_angle > 0){
-  //     // Tilted down
-  //     if (zero_tilt - current_tilt > 0){
-  //       if (targets.get(index).target == 1){
-  //         println("Selected 1");
-  //         current_stage = 2;  
-  //       }
-  //       else{
-  //         println("Mistake in stage 1");
-  //         if (trialIndex>0){
-  //           trialIndex--; //move back one trial as penalty!
-  //         }
-  //       }
-  //     }
-  //     // Tilted up
-  //     else{
-  //       if (targets.get(index).target == 3){
-  //         println("Selected 3");
-  //         current_stage = 2;
-  //       }
-  //       else{
-  //         println("Mistake in stage 1");
-  //         if (trialIndex>0){
-  //           trialIndex--; //move back one trial as penalty!
-  //         }
-  //       }
-  //     }
-  //   }
-  //   else{
-  //     // Tilted down
-  //     if (zero_tilt - current_tilt > 0){
-  //       if (targets.get(index).target == 0){
-  //         println("Selected 0");
-  //         current_stage = 2;  
-  //       }
-  //       else{
-  //         println("Mistake in stage 1");
-  //         if (trialIndex>0){
-  //           trialIndex--; //move back one trial as penalty!
-  //         }
-  //       }
-  //     }
-  //     // Tilted up
-  //     else{
-  //       if (targets.get(index).target == 2){
-  //         println("Selected 2");
-  //         current_stage = 2;
-  //       }
-  //       else{
-  //         println("Mistake in stage 1");
-  //         if (trialIndex>0){
-  //           trialIndex--; //move back one trial as penalty!
-  //         }
-  //       }
-  //     }
-  //   }
-
-  //   countDownTimerWait = 30;
-  // }
 }
 
 void onProximityEvent(float d, long a, int b){
@@ -292,6 +259,8 @@ void onProximityEvent(float d, long a, int b){
   if(current_stage == 1 || current_stage == 3){
     return;
   }
+
+  current_proximity = d;
 
   if(userDone){
     return;
@@ -314,7 +283,6 @@ void onProximityEvent(float d, long a, int b){
       println("Stage 2 correct");
       trialIndex++;
       if(trialIndex < targets.size()){
-        current_cursor = targets.get(trialIndex).action;
         cursor_swap = 60;
       }
       current_stage = 1;
@@ -324,10 +292,21 @@ void onProximityEvent(float d, long a, int b){
       if(trialIndex > 0) trialIndex--;
       current_stage = 1;
     }
+    current_cursor = most_common;
+    zeroed = false;
   }
 }
 
 void mousePressed(){
   zero_angle = current_angle;
   zero_tilt = current_tilt;
+
+  if(current_proximity > 0){
+    zeroed = true;
+  }
+
+  if(!started){
+    started = true;
+    startTime = millis();
+  }
 }
