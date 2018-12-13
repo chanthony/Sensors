@@ -23,7 +23,7 @@ float current_force;
 float zero_force;
 
 boolean pressed;
-float press_time;
+long press_time;
 
 boolean wrong = false;
 
@@ -167,11 +167,11 @@ void draw() {
     }
 
     if(pressed = true){
-      if(targets.get(index).action == 1 && (millis() * 1000000 - press_time)/500000000 >= 0.5 ){
-        fill(255,0,0);
+      if(targets.get(index).action == 1 && (millis() * 1000000 - press_time)/500000000 < 0.5 ){
+        fill(180);
       }
       else{
-        fill(180);
+        fill(255,0,0);
       }
     }
 
@@ -264,7 +264,7 @@ void onProximityEvent(float d, long a, int b){
 
   // Released
   if(pressed == true && d > 0){
-    if((a - press_time)/500000000 < 0.5){
+    if((a - press_time)/1000000000 < 0.5){
       if(targets.get(index).action == 0 && wrong == false){
         trialIndex++;
         current_stage = 1;
