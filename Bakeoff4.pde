@@ -28,7 +28,7 @@ boolean wrong = false;
 int current_cursor = 0;
 
 // A countdown for when to swap the cursor
-int cursor_swap = 60;
+int cursor_swap = 30;
 
 // Which stage we're in
 // Stage 1 = Selecting left or right
