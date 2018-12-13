@@ -294,6 +294,7 @@ void onProximityEvent(float d, long a, int b){
     }
     current_cursor = most_common;
     zeroed = false;
+    cursor_swap = 60;
   }
 }
 
