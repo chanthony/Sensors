@@ -178,7 +178,7 @@ void draw() {
 
     //Swap cursor every second
     if(cursor_swap <= 0){
-      cursor_swap = 60;
+      cursor_swap = 30;
       current_cursor = (current_cursor + 1) % 2;
     }
     else{
@@ -283,7 +283,7 @@ void onProximityEvent(float d, long a, int b){
       println("Stage 2 correct");
       trialIndex++;
       if(trialIndex < targets.size()){
-        cursor_swap = 60;
+        cursor_swap = 30;
       }
       current_stage = 1;
     }
@@ -294,7 +294,7 @@ void onProximityEvent(float d, long a, int b){
     }
     current_cursor = most_common;
     zeroed = false;
-    cursor_swap = 60;
+    cursor_swap = 30;
   }
 }
 
