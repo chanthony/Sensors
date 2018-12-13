@@ -22,6 +22,9 @@ float current_tilt;
 float current_force;
 float zero_force;
 
+boolean pressed;
+float press_time;
+
 boolean wrong = false;
 
 // Which of the two boxes have been selected. 0 or 1
@@ -107,7 +110,7 @@ void draw() {
 
   countDownTimerWait--;
 
-  //text("Trial #: " + trialIndex, 50, 50);
+  text("Trial #: " + trialIndex, 50, 50);
 
   if (startTime == 0)
     startTime = millis();
@@ -210,7 +213,6 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     return;
   }
 
-
   if(userDone){
     return;
   }
@@ -285,6 +287,7 @@ void onProximityEvent(float d, long a, int b){
     }
     current_cursor = most_common;
     zeroed = false;
+    wrong = false;
     cursor_swap = 30;
   }
 }
