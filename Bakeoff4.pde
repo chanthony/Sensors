@@ -158,37 +158,25 @@ void draw() {
   }
 
   if(current_stage == 2){
-    // Draw left circle
-    if (targets.get(index).action==0)
-      fill(0, 255, 0);
-    else{
-      fill(180);
-    }
-    ellipse(width/2 - 100 - 400, height/2 - 200 + 100, 300, 300);
-    
-    if (targets.get(index).action==1)
-      fill(0, 255, 0);
-    else{
-      fill(180);
-    }
-    ellipse(width/2 - 100 + 400, height/2 - 200 + 100, 300, 300);
-
-    // Draw cursor circle
-    noFill();
-    stroke(255,0,0);
-    strokeWeight(8);
-    ellipse(width/2 - 100 + (400 * pow(-1, current_cursor + 1)), height/2 - 200 + 100, 400, 400);
-
-    //Swap cursor every second
-    if(cursor_swap <= 0){
-      cursor_swap = 30;
-      current_cursor = (current_cursor + 1) % 2;
+    int width_radius;
+    if(targets.get(index).action == 0){
+      width_radius = 200;
     }
     else{
-      cursor_swap--;
+      width_radius = 600;
     }
 
-    strokeWeight(1);
+    if(pressed = true){
+      if(targets.get(index).action == 1 && (millis() * 1000000 - press_time)/500000000 >= 0.5 ){
+        fill(255,0,0);
+      }
+      else{
+        fill(180);
+      }
+    }
+
+    ellipse(1050, 500,  width_radius, 200);
+    fill(180);
   }
 
   countDownTimerWait = countDownTimerWait - 1;
@@ -217,7 +205,7 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     return;
   }
 
-  if(current_stage == 1 && abs(current_angle - zero_angle) > 10){
+  if(current_stage == 1 && abs(current_angle - zero_angle) > 15){
     if(zero_angle - current_angle > 0){// Tilted to the right
       // If they were supposed to tilt to the left
       if(targets.get(index).target%2 != 1){
@@ -234,7 +222,7 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     }
   }
 
-  else if (current_stage == 3 && abs(current_tilt - zero_tilt) > 15){
+  else if (current_stage == 3 && abs(current_tilt - zero_tilt) > 20){
     // Tilted up
     if(zero_tilt - current_tilt > 0){
       // Was supposed to tilt down
@@ -254,6 +242,8 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
 }
 
 void onProximityEvent(float d, long a, int b){
+  println(d);
+  
   // Only use the proximity sensor in the second stage
   if(current_stage == 1 || current_stage == 3){
     return;
@@ -267,28 +257,36 @@ void onProximityEvent(float d, long a, int b){
 
   int index = trialIndex;
 
+  if(pressed == false && d == 0.0){
+    pressed = true;
+    press_time = a;
+  }
 
-  // If the sensor is covered
-  if(d == 0.0){
-    println("GUESSED");
-    // Selected the correct option
-    if(current_cursor == targets.get(index).action && wrong == false){
-      println("Stage 2 correct");
-      trialIndex++;
-      if(trialIndex < targets.size()){
-        cursor_swap = 30;
+  // Released
+  if(pressed == true && d > 0){
+    if((a - press_time)/500000000 < 0.5){
+      if(targets.get(index).action == 0 && wrong == false){
+        trialIndex++;
+        current_stage = 1;
       }
-      current_stage = 1;
+      else{
+        if(trialIndex > 0) trialIndex--;
+        current_stage = 1;
+      }
     }
     else{
-      println("MISTAKE IN STAGE 2");
-      if(trialIndex > 0) trialIndex--;
-      current_stage = 1;
+      if(targets.get(index).action == 1 && wrong == false){
+        trialIndex++;
+        current_stage = 1;
+      }
+      else{
+        if(trialIndex > 0) trialIndex--;
+        current_stage = 1;
+      }
     }
-    current_cursor = most_common;
-    zeroed = false;
+
     wrong = false;
-    cursor_swap = 30;
+    pressed = false;
   }
 }
 
