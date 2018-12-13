@@ -29,6 +29,8 @@ int cursor_swap = 60;
 // Which stage we're in
 int current_stage = 1;
 
+int most_common;
+
 private class Target
 {
   int target = 0;
@@ -55,6 +57,8 @@ void setup() {
   ellipseMode(RADIUS);
   textFont(createFont("Arial", 40)); //sets the font to Arial size 20
   textAlign(CENTER);
+  int zero_count = 0;
+  int one_count = 0;
 
   for (int i=0; i<trialCount; i++)  //don't change this!
   {
@@ -62,10 +66,23 @@ void setup() {
     t.target = ((int)random(1000))%4;
     t.action = ((int)random(1000))%2;
     targets.add(t);
+    if(t.action == 0){
+      zero_count++;
+    }
+    else{
+      one_count++;
+    }
     println("created target with " + t.target + "," + t.action);
   }
 
   Collections.shuffle(targets); // randomize the order of the button;
+
+  if(zero_count > one_count){
+    most_common = 0;
+  }
+  else{
+    most_common = 1;
+  }
 
 }
 
@@ -157,7 +174,7 @@ void draw() {
 
     //Swap cursor every second
     if(cursor_swap <= 0){
-      cursor_swap = 60;
+      cursor_swap = 30;
       current_cursor = (current_cursor + 1) % 2;
     }
     else{
@@ -273,8 +290,7 @@ void onProximityEvent(float d, long a, int b){
       println("Stage 2 correct");
       trialIndex++;
       if(trialIndex < targets.size()){
-        current_cursor = targets.get(trialIndex).action;
-        cursor_swap = 60;
+        cursor_swap = 30;
       }
       current_stage = 1;
     }
@@ -283,6 +299,8 @@ void onProximityEvent(float d, long a, int b){
       if(trialIndex > 0) trialIndex--;
       current_stage = 1;
     }
+
+    current_cursor = most_common;
   }
 }
 
