@@ -210,9 +210,6 @@ void onOrientationEvent(float x, float y, float z, long time, int accuracy){
     return;
   }
 
-  if(countDownTimerWait > 0){
-    return;
-  }
 
   if(userDone){
     return;
@@ -263,12 +260,6 @@ void onProximityEvent(float d, long a, int b){
   current_proximity = d;
 
   if(userDone){
-    return;
-  }
-
-  // Avoid repeated rapid mistakes
-  if(countDownTimerWait > 0){
-    println(countDownTimerWait);
     return;
   }
 
